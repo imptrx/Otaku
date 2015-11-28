@@ -1,5 +1,11 @@
 #include "event.h"
 
+enum {
+    CONTENT_KEY,
+    TITLE_KEY,
+    SUBTITLE_KEY
+}
+
 void inbox_received_callback(DictionaryIterator *iterator, void *context) {
   APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
 }
