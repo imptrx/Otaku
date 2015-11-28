@@ -1,4 +1,4 @@
-#include <pebble.h>
+#include "event.h"
 
 #define NUM_MENU_SECTIONS 1
 #define NUM_MENU_ITEMS 2
@@ -57,13 +57,19 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, menu_layer_get_layer(data->layer));
 
   menu_layer_set_click_config_onto_window(data->layer, window);
+
+  // Communication between phone and pebble
+  app_message_register_inbox_received(inbox_received_callback);
+  app_message_register_inbox_dropped(inbox_dropped_callback);
+  app_message_register_outbox_failed(outbox_failed_callback);
+  app_message_register_outbox_sent(outbox_sent_callback);
 }
 
 static void main_window_unload(Window *window) {
   // Grab user data
   MainMenuData *data = window_get_user_data(window);
   
-  for (uint8_t i = 0; i < NUM_MENU_SECTIONS; i++){
+  for (uint8_t i = 0; i < NUM_MENU_ITEMS; i++){
     gbitmap_destroy(data->icons[i]);
   }
   menu_layer_destroy(data->layer);
