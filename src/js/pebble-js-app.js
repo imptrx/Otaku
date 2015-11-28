@@ -100,7 +100,7 @@ function getMangaList() {
                 var title = mangas.lists.reading[i].manga.title_english;
                 var status = mangas.lists.reading[i].manga.publishing_status;
                 console.log(title + ':' + status);
-                var message = {TITLE_KEY: title, SUBTITLE_KEY: subtitle};
+                var message = {TITLE_KEY: title, SUBTITLE_KEY: status};
                 Pebble.sendAppMessage(message, null, null);
             }
         }
@@ -113,12 +113,13 @@ Pebble.addEventListener('ready', function(e) {
 
 // Called when incoming message from the Pebble is recevied
 Pebble.addEventListener('appmessage', function(e) {
-    switch(e.CONTENT_KEY) {
-        case anime:
+    console.log(JSON.stringify(e));
+    switch(e.payload.CONTENT_KEY) {
+        case "Anime":
             getAiringAnime();
         break;
 
-        case manga:
+        case "Manga":
             getMangaList();
         break;
     }

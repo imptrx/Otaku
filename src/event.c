@@ -4,6 +4,29 @@ enum {
     CONTENT_KEY,
     TITLE_KEY,
     SUBTITLE_KEY
+};
+
+void send_message(char *query) {
+    Tuplet queryTuplet = TupletCString(CONTENT_KEY, query);
+    DictionaryIterator *iter;
+
+    app_message_outbox_begin(&iter);
+    dict_write_tuplet(iter, &queryTuplet);
+
+    app_message_outbox_send();
+}
+
+static void in_received_handler(DictionaryIterator *received, void *context) {
+    Tuple *data = dict_read_first(received);
+    while (data) {
+        switch (data->key) {
+            case TITLE_KEY:
+            break;
+
+            case SUBTITLE_KEY:
+            break;
+        }
+    }
 }
 
 void inbox_received_callback(DictionaryIterator *iterator, void *context) {
