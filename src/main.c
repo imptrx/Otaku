@@ -1,4 +1,4 @@
-#include <pebble.h>
+#include "event.h"
 
 #define NUM_MENU_SECTIONS 1
 #define NUM_MENU_ITEMS 2
@@ -19,9 +19,18 @@ static uint16_t menu_layer_get_num_rows_callback(struct MenuLayer *menu_layer, u
   return NUM_MENU_ITEMS;
 }
 
+static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t section_index, void *data) {
+	return MENU_CELL_BASIC_HEADER_HEIGHT;
+}
+
 static int16_t menu_layer_get_cell_height_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
   GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
   return bounds.size.h / NUM_MENU_ITEMS;
+}
+
+static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
+  // Draw title text in the section header
+  menu_cell_basic_header_draw(ctx, cell_layer, "OTAKU");
 }
 
 static void menu_layer_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
@@ -50,20 +59,28 @@ static void main_window_load(Window *window) {
   menu_layer_set_callbacks(data->layer, data, (MenuLayerCallbacks) {
     .get_num_rows = menu_layer_get_num_rows_callback,
     .get_num_sections = menu_layer_get_num_sections_callback,
-    .draw_row = menu_layer_draw_row_callback,
+	.get_header_height = menu_get_header_height_callback,
+	.draw_header = menu_draw_header_callback,
+	.draw_row = menu_layer_draw_row_callback,
     .get_cell_height = menu_layer_get_cell_height_callback
   });
 
   layer_add_child(window_layer, menu_layer_get_layer(data->layer));
 
   menu_layer_set_click_config_onto_window(data->layer, window);
+
+  // Communication between phone and pebble
+  app_message_register_inbox_received(inbox_received_callback);
+  app_message_register_inbox_dropped(inbox_dropped_callback);
+  app_message_register_outbox_failed(outbox_failed_callback);
+  app_message_register_outbox_sent(outbox_sent_callback);
 }
 
 static void main_window_unload(Window *window) {
   // Grab user data
   MainMenuData *data = window_get_user_data(window);
   
-  for (uint8_t i = 0; i < NUM_MENU_SECTIONS; i++){
+  for (uint8_t i = 0; i < NUM_MENU_ITEMS; i++){
     gbitmap_destroy(data->icons[i]);
   }
   menu_layer_destroy(data->layer);
