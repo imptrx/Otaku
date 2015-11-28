@@ -30,7 +30,10 @@ static int16_t menu_layer_get_cell_height_callback(struct MenuLayer *menu_layer,
 
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
   // Draw title text in the section header
-  menu_cell_basic_header_draw(ctx, cell_layer, "OTAKU");
+	graphics_context_set_fill_color(ctx, GColorWhite);
+	graphics_fill_rect(ctx, layer_get_frame(cell_layer), 1, GCornersAll);
+	graphics_context_set_text_color(ctx, GColorBlack);
+	graphics_draw_text(ctx, "OTAKU", fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), layer_get_frame(cell_layer), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 
 static void menu_layer_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
