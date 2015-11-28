@@ -3,7 +3,7 @@
 #define NUM_MENU_SECTIONS 1
 #define NUM_MENU_ITEMS 2
 
-typedef struct{
+typedef struct {
   MenuLayer *layer;
   char *categories[NUM_MENU_ITEMS];
   GBitmap *icons[NUM_MENU_ITEMS];
@@ -11,29 +11,59 @@ typedef struct{
 
 static Window *main_window;
 
+static uint16_t menu_layer_get_num_sections_callback(struct MenuLayer *menu_layer, void *callback_context) {
+  return NUM_MENU_SECTIONS;
+}
+
+static uint16_t menu_layer_get_num_rows_callback(struct MenuLayer *menu_layer, uint16_t section_index, void *callback_context) {
+  return NUM_MENU_ITEMS;
+}
+
+static int16_t menu_layer_get_cell_height_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
+  GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
+  return bounds.size.h / NUM_MENU_ITEMS;
+}
+
+static void menu_layer_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
+  MainMenuData *data = callback_context;
+  uint16_t current_row = cell_index->row;
+  menu_cell_basic_draw(ctx, cell_layer, data->categories[current_row], NULL, data->icons[current_row]);
+}
+
 static void main_window_load(Window *window) {
-  //Grab user data 
+  // Grab user data 
   MainMenuData *data = window_get_user_data(window);
   
-  //Icons for main menu
-  data->icons[0] = gbitmap_create_with_resource(RESOURCE_ID_anime_pic);
-  data->icons[1] = gbitmap_create_with_resource (RESOURCE_ID_manga_pic);
+  // Icons for main menu
+  data->icons[0] = gbitmap_create_with_resource(RESOURCE_ID_TELEVISION);
+  data->icons[1] = gbitmap_create_with_resource (RESOURCE_ID_BOOK);
   
-  //Categories for main menu
+  // Categories for main menu
   data->categories[0] = "Anime";
   data->categories[1] = "Manga";
   
-  //Setup main menu
+  // Setup main menu
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
   data->layer = menu_layer_create(bounds);
+
+  menu_layer_set_callbacks(data->layer, data, (MenuLayerCallbacks) {
+    .get_num_rows = menu_layer_get_num_rows_callback,
+    .get_num_sections = menu_layer_get_num_sections_callback,
+    .draw_row = menu_layer_draw_row_callback,
+    .get_cell_height = menu_layer_get_cell_height_callback
+  });
+
+  layer_add_child(window_layer, menu_layer_get_layer(data->layer));
+
+  menu_layer_set_click_config_onto_window(data->layer, window);
 }
 
 static void main_window_unload(Window *window) {
-  //Grab user data
+  // Grab user data
   MainMenuData *data = window_get_user_data(window);
   
-  for (uint8_t i = 0; i < 2; i++){
+  for (uint8_t i = 0; i < NUM_MENU_SECTIONS; i++){
     gbitmap_destroy(data->icons[i]);
   }
   menu_layer_destroy(data->layer);
@@ -44,15 +74,18 @@ static void main_window_unload(Window *window) {
 static void init() {
   // Create main Window
   main_window = window_create();
-  
-  menu_layer_set_click_config_onto_window(data->layer, window);
-  
+
   window_set_window_handlers(main_window, (WindowHandlers) {
     .load = main_window_load,
     .unload = main_window_unload,
   });
   
-  //Push window to display
+  MainMenuData *data = malloc(sizeof(MainMenuData));
+  memset(data, 0, sizeof(MainMenuData));
+
+  window_set_user_data(main_window, data);
+
+  // Push window to display
   window_stack_push(main_window, true);
 }
 
@@ -61,7 +94,7 @@ static void deinit() {
   window_destroy(main_window);
 }
 
-//Main function
+// Main function
 int main(void) {
   init();
   app_event_loop();
