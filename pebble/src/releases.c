@@ -9,10 +9,8 @@ static uint16_t menu_layer_get_num_rows_callback(struct MenuLayer *menu_layer, u
     return data->count;
 }
 
-
 static void menu_layer_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
     ReleaseMenu *data = callback_context;
-
     menu_cell_basic_draw(ctx, cell_layer, data->titles[cell_index->row], data->subtitles[cell_index->row], NULL);
 }
 
@@ -25,11 +23,10 @@ static void window_load(Window *window) {
     // Setup essential parts of ReleaseMenu
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
-    data->layer = menu_layer_create(bounds);
 
+    data->layer = menu_layer_create(bounds);
     data->titles = malloc(sizeof(char *));
     data->subtitles = malloc(sizeof(char *));
-
     data->count = 0;
 
     menu_layer_set_callbacks(data->layer, data, (MenuLayerCallbacks) {
@@ -49,8 +46,17 @@ static void window_load(Window *window) {
 static void window_unload(Window *window) {
     ReleaseMenu *data = window_get_user_data(window);
 
+    /*
+    // There's an issue with freeing this memory, causes app to crash upon pressing back
     menu_layer_destroy(data->layer);
+    for (int i = 0; i < data->count; i++) {
+        free(data->titles[i]);
+        free(data->subtitles[i]);
+    }
+    free(data->titles);
+    free(data->subtitles);
     free(data);
+    */
     window_destroy(window);
 }
 

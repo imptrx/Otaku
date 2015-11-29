@@ -30,7 +30,6 @@ static int16_t menu_layer_get_cell_height_callback(struct MenuLayer *menu_layer,
 
 static void menu_layer_select_click_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
   MainMenuData *data = callback_context;
-
   releases_init(data->categories[cell_index->row]);
 }
 
@@ -117,14 +116,8 @@ static void init() {
   window_stack_push(main_window, true);
 }
 
-static void deinit() {
-  // Destroy main Window
-  window_destroy(main_window);
-}
-
 // Main function
 int main(void) {
   init();
   app_event_loop();
-  deinit();
 }
