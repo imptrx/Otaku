@@ -63,24 +63,6 @@ function getAiringAnime() {
       // The returned JSON object is a 'small model',
       // fetch the 'large model' to obtain more information about the anime
       var anime = sendDataRequest('GET', "https://anilist.co/api/anime/" + data[i].anime.id + "?access_token=" + access_token);
-      // Maximum of 1024 bytes for the body of a Pebble timeline pin
-      var total = Math.min(anime.description.length, 1000);
-      var description = anime.description.slice(0, total);
-
-      // Create the pin to be sent to the watch
-      var pin = {
-        'id': anime.title_romaji + anime.airing.next_episode,
-        'time': anime.airing.time,
-        'layout': {
-          'type': 'genericPin',
-          'title': anime.title_romaji,
-          'subtitle': 'Episode: ' + anime.airing.next_episode,
-          'body': description,
-          'tinyIcon': 'system://images/TV_SHOW'
-        }
-      };
-      timelineRequest(pin, 'PUT');
-
       var message = {
         TITLE_KEY: anime.title_romaji,
         SUBTITLE_KEY: 'Episode: ' + anime.airing.next_episode.toString()
@@ -104,7 +86,6 @@ function getMangaList() {
       for (var i = 0; i < mangas.lists.reading.length; i++) {
         var title = mangas.lists.reading[i].manga.title_english;
         var status = mangas.lists.reading[i].manga.publishing_status;
-        console.log(title + ':' + status);
         var message = {
           TITLE_KEY: title,
           SUBTITLE_KEY: status
@@ -131,23 +112,29 @@ Pebble.addEventListener('appmessage', function(e) {
 
 // Called when the configuration window is opened
 Pebble.addEventListener('showConfiguration', function(e) {
-  Pebble.openURL('https://anilist.co/api/auth/authorize?grant_type=authorization_code&client_id=navies-tm6ox&redirect_uri=pebblejs://close&response_type=code');
+  var base_uri = 'https://anilist.co/api/';
+  var url = base_uri + 'auth/authorize?grant_type=authorization_code';
+  url += '&client_id=navies-tm6ox';
+  url += '&redirect_uri=pebblejs://close';
+  url += '&response_type=code';
+  Pebble.openURL(url);
 });
 
 // Called when the configuration window is closed
 Pebble.addEventListener("webviewclosed", function(e) {
   console.log(e.response);
-  var code = e.response.match(/=\S{1,}&/)[0];
+  var authorization_code = e.response.match(/=\S{1,}&/)[0];
   // Trim extra trapped characters from regexp
-  code = code.slice(1, code.length - 1);
+  authorization_code = authorization_code.slice(1, code.length - 1);
+
+  var timeline_token = Pebble.getTimelineToken(null, null);
 
   // Exchange code for access token
   var req = new XMLHttpRequest();
-  req.open('POST', 'https://anilist.co/api/auth/access_token?grant_type=authorization_code&client_id=navies-tm6ox&client_secret=uhVelNwXkO3go0CHSwuwsJO6&redirect_uri=pebblejs://close&code=' + code, false);
+  var base_uri = 'https://pebble-otaku.herokuapp.com/'
+  var url = base_uri + 'users';
+  url += '?timeline_token=' + timeline_token;
+  url += '&anilist_token=' + authorization_code;
+  req.open('POST', url, null);
   req.send(null);
-
-  var response = JSON.parse(req.responseText);
-  console.log(response.access_token);
-  // Store the access token into phone storage
-  localStorage.setItem('access_token', response.access_token);
 });
