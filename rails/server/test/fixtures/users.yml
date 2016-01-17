@@ -1,0 +1,9 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  timeline_token: MyString
+  anilist_token: MyString
+
+two:
+  timeline_token: MyString
+  anilist_token: MyString
